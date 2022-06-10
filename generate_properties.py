@@ -157,6 +157,10 @@ def create_oval21(seed, use_cpu):
     if not os.path.exists(vnnlib_path):
         os.makedirs(vnnlib_path)
 
+    # Remove old files in the vnnlib folder.
+    for vnnlib_file in os.scandir(vnnlib_path):
+        os.remove(vnnlib_file.path)
+
     # load Cifar test set to save time
     cifar_test = datasets.CIFAR10('./cifardata/', train=False, download=True,
                                   transform=transforms.Compose([transforms.ToTensor()]))
@@ -313,7 +317,8 @@ def create_benchmark_csv(csv_filename, property_dict, timeout):
     with open(csv_filename, "w") as f:
         for net in property_dict.keys():
             for prop in property_dict[net]:
-                f.write(f"{net},{prop},{timeout}\n")
+                # The VNNCOMP 2022 submission site will append the folder name, so we only need the base name here.
+                f.write(f"{os.path.basename(net)},{os.path.basename(prop)},{timeout}\n")
 
 
 def pytorch_to_onnx(onnx_filename, model, input_example):
@@ -327,8 +332,8 @@ def pytorch_to_onnx(onnx_filename, model, input_example):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--seed', type=int, help='Random seed for the image sampling', default=0)
-    parser.add_argument('--cpu', action='store_true', help='Use cpu instead of a gpu (if not available)')
+    parser.add_argument('seed', type=int, help='Random seed for the image sampling', default=0)
+    parser.add_argument('--gpu', action='store_true', help='Use gpu instead of a cpu')
     args = parser.parse_args()
 
-    create_oval21(args.seed, args.cpu)
+    create_oval21(args.seed, not args.gpu)
